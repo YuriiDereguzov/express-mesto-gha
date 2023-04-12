@@ -1,4 +1,20 @@
 {
-  "extends": "airbnb-base",
-  "allow": "_id"
+  "extends": [
+    "airbnb-base",
+    "eslint-config-airbnb-base",
+    "eslint-plugin-import"
+  ],
+  "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["_id"] }],
+    "no-console":"off"
+  },
+  "env": {
+      "browser": true,
+      "commonjs": true,
+      "es2021": true
+  },
+  "overrides": [ ],
+  "parserOptions": {
+      "ecmaVersion": "latest"
+  }
 }
