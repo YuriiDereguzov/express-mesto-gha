@@ -1,8 +1,8 @@
 // const path = require('path');
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const routes = require('./routes');
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const routes = require("./routes");
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 
@@ -14,7 +14,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {});
 
 // мидлвэр
 app.use((req, res, next) => {
-  req.user = { _id: '642ed05a06f01ebe4eb9281a' };
+  req.user = { _id: "642ed05a06f01ebe4eb9281a" };
   next();
 });
 // app.use(express.static(path.join(__dirname, 'public')));
