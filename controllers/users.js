@@ -1,30 +1,34 @@
 const User = require('../models/user');
+const http2 = require('node:http2');
+
+// const RES_OK = 200;
+const RES_OK = http2.constants.HTTP_STATUS_OK;
+// const ERROR_CODE = 400;
+const ERROR_CODE = http2.constants.HTTP_STATUS_BAD_REQUEST
+// const ERROR_NOTFOUND = 404;
+const ERROR_NOTFOUND = http2.constants.HTTP_STATUS_NOT_FOUND;
+// const ERROR_DEFAULT = 500;
+const ERROR_DEFAULT = http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR;
 
 // GET /users — возвращает всех пользователей
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
-    .catch(() => res.status(500).send({ Message: "ошибка поиска пользователей" }));
+    .then((users) => res.status(RES_OK).send(users))
+    .catch(() => res.status(ERROR_DEFAULT).send({ Message: "Произошла ошибка." }));
 };
 
 // GET /users/:userId - возвращает пользователя по _id
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) =>{
-      if (user) {
-        res.status(200).send(user);
+    .then((users) => res.status(RES_OK).send(users))
+    .catch((err) => {
+      console.log("1console:", err.name)
+      if (err.name === 'CastError') {
+        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
       } else {
-        res.status(404).send({ message: "ошибка поиска по id" })
+        res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка' });
       }
     })
-    .catch((err) => {
-      console.log(err);
-      // if (err.name == 'CastError') {
-      //   res.status(400).send({ message: 'Некоретный id' })
-      // } else {
-      //   res.status(500).send({ message: 'Произошла ошибка' })
-      // }
-    });
 };
 
 // POST /users — создаёт пользователя
@@ -32,14 +36,13 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.status(RES_OK).send(user))
     .catch((err) => {
-      console.log(err);
-      // if (err._message == 'user validation failed') {
-      //   res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' })
-      // } else {
-      //   res.status(500).send({ message: 'Произошла ошибка' })
-      // }
+      if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' })
+      } else {
+        res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
+      }
     });
 };
 
@@ -48,20 +51,15 @@ const updateUserProfile = (req, res) => {
   console.log(req.user._id);
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
-    .then((user) =>{
-      if (user) {
-        res.status(200).send(user);
-      } else {
-        res.status(404).send({message: "пользователь не найден"})
-      }
-    })
+    .then((user) => res.status(RES_OK).send(user))
     .catch((err) => {
-      console.log(err);
-      // if (err._message == 'user validation failed') {
-      //   res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' })
-      // } else {
-      //   res.status(500).send({ message: 'Произошла ошибка' })
-      // }
+      if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' })
+      } else  if (err.name === 'CastError') {
+        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
+      } else {
+        res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
+      }
     });
 };
 
@@ -69,20 +67,15 @@ const updateUserProfile = (req, res) => {
 const updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
-    .then((user) =>{
-      if (user) {
-        res.status(200).send(user);
-      } else {
-        res.status(404).send({message: "пользователь не найден"})
-      }
-    })
+    .then((user) => res.status(RES_OK).send(user))
     .catch((err) => {
-      console.log(err);
-      // if (err._message == 'user validation failed') {
-      //   res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' })
-      // } else {
-      //   res.status(500).send({ message: 'Произошла ошибка' })
-      // }
+      if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' })
+      } else  if (err.name === 'CastError') {
+        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
+      } else {
+        res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
+      }
     });
 };
 
