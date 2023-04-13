@@ -21,8 +21,22 @@ const getCards = (req, res) => {
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => res.status(RES_OK).send({ message: "Карточка удалена." }))
-    .catch((err) => res.status(ERROR_NOTFOUND).send({ message: "Карточка с указанным _id не найдена." }));
+    // .then((card) => res.status(RES_OK).send({ message: "Карточка удалена." }))
+    // .catch((err) => res.status(ERROR_NOTFOUND).send({ message: "Карточка с указанным _id не найдена." }));
+    .then((users) => {
+      if (users) {
+        res.send(users)
+      } else {
+        res.status(ERROR_NOTFOUND).send({ message: "Карточка с указанным _id не найдена." });
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные.' })
+      } else {
+        res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка' });
+      }
+    })
 };
 
 // POST /cards — создаёт карточку
@@ -44,13 +58,25 @@ const createCard = (req, res) => {
 // PUT /cards/:cardId/likes — поставить лайк карточке
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .then((card) => res.status(RES_OK).send({ message: "like." }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' })
-      } else if (err.name === 'CastError') {
-        res.status(ERROR_NOTFOUND).send({ message: "Передан несуществующий _id карточки." });
+    // .then((card) => res.status(RES_OK).send({ message: "like." }))
+    .then((card) => {
+      if (card) {
+        res.send({ message: "like." })
       } else {
+        // res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' })
+        res.status(ERROR_NOTFOUND).send({ message: "Передан несуществующий _id карточки." });
+      }
+    })
+    .catch((err) => {
+      // if (err.name === 'ValidationError') {
+      //   res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' })
+      // }
+      // else
+      if (err.name === 'CastError') {
+        // res.status(ERROR_NOTFOUND).send({ message: "Передан несуществующий _id карточки." });
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки лайка.' })
+      }
+      else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
       }
     });
@@ -59,13 +85,25 @@ const likeCard = (req, res) => {
 // DELETE /cards/:cardId/likes — убрать лайк с карточки
 const dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .then((card) => res.status(RES_OK).send({ message: "dislike." }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки лайка.' })
-      } else if (err.name === 'CastError') {
-        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
+    // .then((card) => res.status(RES_OK).send({ message: "dislike." }))
+    .then((card) => {
+      if (card) {
+        res.send({ message: "dislike." })
       } else {
+        // res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' })
+        res.status(ERROR_NOTFOUND).send({ message: "Передан несуществующий _id карточки." });
+      }
+    })
+    .catch((err) => {
+      // if (err.name === 'ValidationError') {
+      //   res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' })
+      // }
+      // else
+      if (err.name === 'CastError') {
+        // res.status(ERROR_NOTFOUND).send({ message: "Передан несуществующий _id карточки." });
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' })
+      }
+      else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
       }
     });

@@ -20,11 +20,19 @@ const getUsers = (req, res) => {
 // GET /users/:userId - возвращает пользователя по _id
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((users) => res.status(RES_OK).send(users))
-    .catch((err) => {
-      console.log("1console:", err.name)
-      if (err.name === 'CastError') {
+    // .then((users) => res.status(RES_OK).send(users))
+    .then((users) => {
+      if (users) {
+        res.send(users)
+      } else {
+        // res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' })
         res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные пользователя.' })
+        // res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
       } else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка' });
       }
@@ -50,13 +58,19 @@ const createUser = (req, res) => {
 const updateUserProfile = (req, res) => {
   console.log(req.user._id);
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
-    .then((user) => res.status(RES_OK).send(user))
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    // .then((user) => res.status(RES_OK).send(user))
+    .then((user) => {
+      if (user) {
+        res.send(user)
+      } else {
+        // res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' })
+        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
+      }
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' })
-      } else  if (err.name === 'CastError') {
-        res.status(ERROR_NOTFOUND).send({ message: "Пользователь по указанному _id не найден." });
       } else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' })
       }
