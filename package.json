@@ -6,14 +6,14 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "lint": "npx eslint app.js"
+    "lint": "npx eslint ."
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YuriiDereguzov/express-mesto-gha.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Yurii Dereguzov",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/YuriiDereguzov/express-mesto-gha/issues"
