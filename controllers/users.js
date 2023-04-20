@@ -1,7 +1,8 @@
 const http2 = require('node:http2');
 const bcrypt = require('bcryptjs');
-// const jsonwebtoken = require('jsonwebtoken'); // импортируем модуль jsonwebtoken
+const jsonwebtoken = require('jsonwebtoken'); // импортируем модуль jsonwebtoken
 const User = require('../models/user');
+const { JWT_SECRET, NODE_ENV } = require('../config');
 
 const ERROR_CODE = http2.constants.HTTP_STATUS_BAD_REQUEST;
 const ERROR_NOTFOUND = http2.constants.HTTP_STATUS_NOT_FOUND;
@@ -113,6 +114,30 @@ const updateUserAvatar = (req, res) => {
 };
 
 // POST / — логинет профиль
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  User
+    .findOne({ email })
+    .orFail(() => res.status(404).send({ message: 'Пользователь не найден' }))
+    .then((user) => bcrypt.compare(password, user.password).then((matched) => {
+      if (matched) {
+        return user;
+      }
+      return res.status(404).send({ message: 'Пользователь не найден' });
+    }))
+    .then((user) => {
+      // создадим jwt
+      const token = jsonwebtoken.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
+      // вернём jwt
+      res.send({ user, token });
+    })
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+};
 
 module.exports = {
   getUsers,
@@ -120,5 +145,5 @@ module.exports = {
   createUser,
   updateUserProfile,
   updateUserAvatar,
-  // login,
+  login,
 };
