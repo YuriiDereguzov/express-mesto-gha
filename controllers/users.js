@@ -1,4 +1,6 @@
 const http2 = require('node:http2');
+const bcrypt = require('bcryptjs');
+// const jsonwebtoken = require('jsonwebtoken'); // импортируем модуль jsonwebtoken
 const User = require('../models/user');
 
 const ERROR_CODE = http2.constants.HTTP_STATUS_BAD_REQUEST;
@@ -37,17 +39,28 @@ const getUser = (req, res) => {
 
 // POST /users — создаёт пользователя
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+  // const { name, about, avatar } = req.body;
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
 
-  User.create({ name, about, avatar })
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
+  // User.create({ name, about, avatar })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(ERROR_CODE)
-          .send({
-            message: 'Переданы некорректные данные при создании пользователя.',
-          });
+        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       } else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' });
       }
@@ -99,10 +112,13 @@ const updateUserAvatar = (req, res) => {
     });
 };
 
+// POST / — логинет профиль
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
   updateUserProfile,
   updateUserAvatar,
+  // login,
 };
