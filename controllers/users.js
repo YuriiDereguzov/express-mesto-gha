@@ -139,6 +139,15 @@ const login = (req, res) => {
     });
 };
 
+// GET /users/me - возвращает информацию о текущем пользователе
+const getCurrentUser = (req, res) => {
+  User
+    .findById(req.user._id)
+    .orFail(() => res.status(404).send({ message: 'Пользователь не найден' }))
+    .then((user) => res.send(user))
+    .catch((err) => res.status(401).send({ message: err.message }));
+};
+
 module.exports = {
   getUsers,
   getUser,
@@ -146,4 +155,5 @@ module.exports = {
   updateUserProfile,
   updateUserAvatar,
   login,
+  getCurrentUser,
 };
