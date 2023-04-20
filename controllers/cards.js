@@ -15,17 +15,22 @@ const getCards = (req, res) => {
 
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
-  Card.findByIdAndDelete(req.params.cardId)
-    .then((users) => {
-      if (users) {
-        res.send(users);
+  Card.findById(req.params.cardId)
+    .orFail(() => new Error('User not found'))
+    .then((card) => {
+      if (card.owner.toString() === req.user._id) {
+        Card.findByIdAndDelete(req.params.cardId)
+          .then((deletedCard) => res.send({ deletedCard, message: 'Карточка успешно удалена' }))
+          .catch(() => res.status(ERROR_NOTFOUND).send({ message: `Карточка с _id ${req.params.cardId} не найдена` }));
       } else {
-        res.status(ERROR_NOTFOUND).send({ message: 'Карточка с указанным _id не найдена.' });
+        res.status(403).send({ message: 'Вы не можете удалять чужие карточки' });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные.' });
+      } else if (err.message === 'User not found') {
+        res.status(ERROR_NOTFOUND).send({ message: `Карточка с _id ${req.params.cardId} не найдена` });
       } else {
         res.status(ERROR_DEFAULT).send({ message: 'Произошла ошибка.' });
       }
