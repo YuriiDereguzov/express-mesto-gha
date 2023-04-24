@@ -1,13 +1,15 @@
 const jsonwebtoken = require('jsonwebtoken');
-
 const { JWT_SECRET } = require('../config');
+const UnauthorizedError = require('./errors/unauthorized-err');
 
 const auth = (req, res, next) => {
   // достаём авторизационный заголовок
   const { authorization } = req.headers;
   // убеждаемся, что он есть или начинается с Bearer
   if (!authorization || !authorization.startsWith('Bearer')) {
-    res.status(401).send({ message: 'Необходима авторизация' });
+    // res.status(401).send({ message: 'Необходима авторизация' });
+    // next(new UnauthorizedError('Необходима авторизация'));
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   // извлечём jwt
@@ -18,7 +20,8 @@ const auth = (req, res, next) => {
     payload = jsonwebtoken.verify(token, JWT_SECRET);
   } catch (err) {
     // отправим ошибку, если не получилось
-    res.status(401).send({ message: 'Необходима авторизация' });
+    // res.status(401).send({ message: 'Необходима авторизация' });
+    next(new UnauthorizedError('Необходима авторизация'));
   }
   req.user = payload; // записываем пейлоуд в объект запроса
 
