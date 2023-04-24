@@ -12,7 +12,6 @@ router.use('/users', auth, userRouter);
 router.use('/cards', auth, cardRouter);
 
 router.use((req, res, next) => {
-  // res.status(404).send({ message: 'Стараница по указанному маршруту не найдена' });
   next(new NotFoundError('Стараница по указанному маршруту не найдена'));
 });
 
