@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
 const routes = require('./routes');
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(routes);
 
+app.use(errors());
 app.use((err, req, res, next) => {
   console.log('next: ', next);
   res.status(err.statusCode).send({ message: err.message });
