@@ -6,6 +6,7 @@ const { JWT_SECRET, NODE_ENV } = require('../config');
 const NotFoundError = require('../middlewares/errors/not-found-err');
 const BadRequestError = require('../middlewares/errors/bad-request-err');
 const ConflictError = require('../middlewares/errors/conflict-err');
+const UnauthorizedError = require('../middlewares/errors/unauthorized-err');
 
 // GET /users — возвращает всех пользователей
 const getUsers = (req, res, next) => {
@@ -26,7 +27,7 @@ const getUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные пользователя.'));
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
       } else {
         next(err);
       }
@@ -51,7 +52,12 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send(user))
+    // .then((user) => res.send(user))
+    .then((userObj) => {
+      const user = userObj.toObject();
+      delete user.password;
+      res.send(user);
+    })
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('пользователь с таким Email уже существует'));
@@ -114,7 +120,7 @@ const login = (req, res, next) => {
 
   User
     .findOne({ email }).select('+password')
-    // .orFail(() => next(new NotFoundError('Пользователь не найден')))
+    .orFail(() => next(new UnauthorizedError('Пользователь не найден')))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;

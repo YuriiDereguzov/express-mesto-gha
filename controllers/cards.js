@@ -2,7 +2,7 @@ const Card = require('../models/card');
 
 const NotFoundError = require('../middlewares/errors/not-found-err');
 const BadRequestError = require('../middlewares/errors/bad-request-err');
-const ConflictError = require('../middlewares/errors/conflict-err');
+const ForbiddenError = require('../middlewares/errors/forbidden-err');
 
 // GET /cards — возвращает все карточки
 const getCards = (req, res, next) => {
@@ -15,6 +15,8 @@ const getCards = (req, res, next) => {
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
+    // .orFail(() => new Error('User not found'))
+    .orFail(() => next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`)))
     .populate('owner')
     .then((card) => {
       if (card.owner._id.toString() === req.user._id) {
@@ -27,7 +29,7 @@ const deleteCard = (req, res, next) => {
             }
           });
       } else {
-        next(new ConflictError('Вы не можете удалять чужие карточки'));
+        next(new ForbiddenError('Вы не можете удалять чужие карточки'));
       }
     })
     .catch((err) => {
