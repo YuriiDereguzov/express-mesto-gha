@@ -15,17 +15,25 @@ const getCards = (req, res, next) => {
 
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
-  const { id } = req.params;
-  return Card.findById(id)
+  Card.findById(req.params.cardId)
     .orFail(() => next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`)))
+    .populate('owner')
     .then((card) => {
-      if (!card.owner.equals(req.user._id)) {
+      if (card.owner._id.toString() !== req.user._id) {
         // пользователь не может удалить карточку, которую он не создавал
         return next(new ForbiddenError('Нельзя удалить чужую карточку'));
       }
       return Card.deleteOne(card)
         .then(() => res.send({ data: card, message: 'Карточка успешно удалена' }));
     })
+    // .then((card) => {
+    //   if (card.owner._id.toString() === req.user._id) {
+    //     Card.deleteOne(card)
+    //       .then((deletedCard) => res.send({ deletedCard, message: 'Карточка успешно удалена' }));
+    //   } else {
+    //     next(new ForbiddenError('Вы не можете удалять чужие карточки'));
+    //   }
+    // })
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
@@ -34,26 +42,6 @@ const deleteCard = (req, res, next) => {
       }
     });
 };
-// const deleteCard = (req, res, next) => {
-//   Card.findById(req.params.cardId)
-//     .orFail(() => next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`)))
-//     .populate('owner')
-//     .then((card) => {
-//       if (card.owner._id.toString() === req.user._id) {
-//         Card.deleteOne(card)
-//           .then((deletedCard) => res.send({ deletedCard, message: 'Карточка успешно удалена' }));
-//       } else {
-//         next(new ForbiddenError('Вы не можете удалять чужие карточки'));
-//       }
-//     })
-//     .catch((err) => {
-//       if (err.name === 'CastError') {
-//         next(new BadRequestError('Переданы некорректные данные'));
-//       } else {
-//         next(err);
-//       }
-//     });
-// };
 
 // POST /cards — создаёт карточку
 const createCard = (req, res, next) => {
