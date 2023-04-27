@@ -40,8 +40,8 @@ const deleteCard = (req, res, next) => {
 //     .populate('owner')
 //     .then((card) => {
 //       if (card.owner._id.toString() === req.user._id) {
-//         Card.deleteOne(card);
-//         res.send({ card, message: 'Карточка успешно удалена' });
+//         Card.deleteOne(card)
+//           .then((deletedCard) => res.send({ deletedCard, message: 'Карточка успешно удалена' }));
 //       } else {
 //         next(new ForbiddenError('Вы не можете удалять чужие карточки'));
 //       }
