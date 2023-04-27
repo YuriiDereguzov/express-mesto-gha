@@ -71,7 +71,6 @@ const createUser = (req, res, next) => {
 
 // PATCH /users/me — обновляет профиль
 const updateUserProfile = (req, res, next) => {
-  console.log(req.user._id);
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -120,12 +119,12 @@ const login = (req, res, next) => {
 
   User
     .findOne({ email }).select('+password')
-    .orFail(() => next(new UnauthorizedError('Пользователь не найден')))
+    .orFail(() => next(new UnauthorizedError('Неправильные почта или пароль')))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
-      if (matched) {
-        return user;
+      if (!matched) {
+        throw new NotFoundError('Пользователь не найден');
       }
-      return next(new NotFoundError('Пользователь не найден'));
+      return user;
     }))
     .then((user) => {
       // создадим jwt

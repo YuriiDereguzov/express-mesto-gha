@@ -7,30 +7,24 @@ const ForbiddenError = require('../middlewares/errors/forbidden-err');
 // GET /cards — возвращает все карточки
 const getCards = (req, res, next) => {
   Card.find({})
-    .populate(Card.owner)
+    .populate('owner')
+    .populate('likes')
     .then((cards) => res.send(cards))
     .catch(next);
 };
 
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res, next) => {
-  Card.findById(req.params.cardId)
-    // .orFail(() => new Error('User not found'))
+  const { id } = req.params;
+  return Card.findById(id)
     .orFail(() => next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`)))
-    .populate('owner')
     .then((card) => {
-      if (card.owner._id.toString() === req.user._id) {
-        Card.deleteOne(card)
-          .then((deletedCard) => {
-            if (deletedCard) {
-              res.send({ deletedCard, message: 'Карточка успешно удалена' });
-            } else {
-              next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`));
-            }
-          });
-      } else {
-        next(new ForbiddenError('Вы не можете удалять чужие карточки'));
+      if (!card.owner.equals(req.user._id)) {
+        // пользователь не может удалить карточку, которую он не создавал
+        return next(new ForbiddenError('Нельзя удалить чужую карточку'));
       }
+      return Card.deleteOne(card)
+        .then(() => res.send({ data: card, message: 'Карточка успешно удалена' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -40,6 +34,26 @@ const deleteCard = (req, res, next) => {
       }
     });
 };
+// const deleteCard = (req, res, next) => {
+//   Card.findById(req.params.cardId)
+//     .orFail(() => next(new NotFoundError(`Карточка с _id ${req.params.cardId} не найдена`)))
+//     .populate('owner')
+//     .then((card) => {
+//       if (card.owner._id.toString() === req.user._id) {
+//         Card.deleteOne(card);
+//         res.send({ card, message: 'Карточка успешно удалена' });
+//       } else {
+//         next(new ForbiddenError('Вы не можете удалять чужие карточки'));
+//       }
+//     })
+//     .catch((err) => {
+//       if (err.name === 'CastError') {
+//         next(new BadRequestError('Переданы некорректные данные'));
+//       } else {
+//         next(err);
+//       }
+//     });
+// };
 
 // POST /cards — создаёт карточку
 const createCard = (req, res, next) => {
@@ -47,7 +61,7 @@ const createCard = (req, res, next) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.send(card))
+    .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Переданы некорректные данные при создании карточки'));

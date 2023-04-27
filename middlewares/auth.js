@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
   const { authorization } = req.headers;
   // убеждаемся, что он есть или начинается с Bearer
   if (!authorization || !authorization.startsWith('Bearer')) {
-    throw new UnauthorizedError('Необходима авторизация');
+    return next(new UnauthorizedError('Необходима авторизация'));
   }
 
   // извлечём jwt
@@ -18,11 +18,11 @@ const auth = (req, res, next) => {
     payload = jsonwebtoken.verify(token, JWT_SECRET);
   } catch (err) {
     // отправим ошибку, если не получилось
-    next(new UnauthorizedError('Необходима авторизация'));
+    return next(new UnauthorizedError('Необходима авторизация'));
   }
   req.user = payload; // записываем пейлоуд в объект запроса
 
-  next();
+  return next();
 };
 
 module.exports = auth;

@@ -12,7 +12,7 @@ router.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri({ scheme: ['http', 'https'] }),
+    avatar: Joi.string().pattern(/(https?:\/\/)(w{3}\.)?(((\d{1,3}\.){3}\d{1,3})|((\w-?)+\.(ru|com)))(:\d{2,5})?((\/.+)+)?\/?#?/),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
   }),
@@ -32,10 +32,13 @@ router.use((req, res, next) => {
   next(new NotFoundError('Стараница по указанному маршруту не найдена'));
 });
 
-router.use((req, res, err) => {
-  const { statusCode = 500, message } = err;
+// было
+// router.use((req, res, err) => {
+//   const { statusCode = 500, message } = err;
 
-  res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
-});
+//   res
+//     .status(statusCode)
+//     .send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
+// });
 
 module.exports = router;
