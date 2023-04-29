@@ -20,19 +20,11 @@ app.use(errors());
 
 // пытаюсь реализовать
 app.use((err, req, res, next) => {
-  // console.log('err: ', err.statusCode);
-  // console.log('req: ', req.body);
-  // console.log('res: ', res.status);
-  // console.log('next: ', next);
+  console.log('next: ', next);
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
 });
-// было
-// app.use((err, req, res, next) => {
-//   console.log('next: ', next);
-//   res.status(err.statusCode).send({ message: err.message });
-// });
 
 app.listen(PORT, () => {
   // Если всё работает, консоль покажет, какой порт приложение слушает
