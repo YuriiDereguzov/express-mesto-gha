@@ -52,7 +52,6 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    // .then((user) => res.send(user))
     .then((userObj) => {
       const user = userObj.toObject();
       delete user.password;
@@ -122,7 +121,7 @@ const login = (req, res, next) => {
     .orFail(() => next(new UnauthorizedError('Неправильные почта или пароль')))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (!matched) {
-        throw new NotFoundError('Пользователь не найден');
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
       return user;
     }))
@@ -130,7 +129,14 @@ const login = (req, res, next) => {
       // создадим jwt
       const token = jsonwebtoken.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
       // вернём jwt
-      res.send({ user, token });
+      res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+        token,
+      });
     })
     .catch(next);
 };

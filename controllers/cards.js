@@ -7,8 +7,7 @@ const ForbiddenError = require('../middlewares/errors/forbidden-err');
 // GET /cards — возвращает все карточки
 const getCards = (req, res, next) => {
   Card.find({})
-    .populate('owner')
-    .populate('likes')
+    .populate(['owner', 'likes'])
     .then((cards) => res.send(cards))
     .catch(next);
 };
